@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Resep AI Halal</title>
+<style>
+body{
+max-width:900px;
+margin:auto;
+padding:20px;
+font-family:Arial;
+}
+input{
+width:100%;
+padding:10px;
+}
+button{
+padding:10px 20px;
+margin-top:10px;
+}
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+td,th{
+border:1px solid #ddd;
+padding:8px;
+}
+</style>
+</head>
+<body>
+
+<h1>Pencarian Resep AI</h1>
+
+<input id="makanan" placeholder="Contoh: Soto Ayam">
+
+<button onclick="cari()">Cari</button>
+
+<div id="hasil"></div>
+
+<script>
+async function cari(){
+
+const makanan =
+document.getElementById("makanan").value;
+
+const res =
+await fetch("/.netlify/functions/resep",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+makanan
+})
+});
+
+const data = await res.json();
+
+let html = `
+<h2>${data.nama}</h2>
+
+<h3>Bahan</h3>
+
+<table>
+<tr>
+<th>Bahan</th>
+<th>Merek</th>
+</tr>
+`;
+
+data.bahan.forEach(b=>{
+html += `
+<tr>
+<td>${b.nama}</td>
+<td>${b.merk}</td>
+</tr>
+`;
+});
+
+html += `
+</table>
+
+<h3>Cara Pembuatan</h3>
+<ol>
+`;
+
+data.cara.forEach(c=>{
+html += `<li>${c}</li>`;
+});
+
+html += "</ol>";
+
+document.getElementById("hasil").innerHTML =
+html;
+}
+</script>
+
+</body>
+</html>
