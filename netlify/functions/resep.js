@@ -1,66 +1,69 @@
 exports.handler = async (event) => {
+  try {
+    const body = JSON.parse(event.body);
+    const makanan = body.makanan;
 
-const body =
-JSON.parse(event.body);
-
-const makanan =
-body.makanan;
-
-const apiKey =
-process.env.OPENAI_API_KEY;
-
-const response =
-await fetch(
-"https://api.openai.com/v1/chat/completions",
-{
-method:"POST",
-headers:{
-"Authorization":
-`Bearer ${apiKey}`,
-"Content-Type":
-"application/json"
-},
-body:JSON.stringify({
-model:"gpt-4o-mini",
-messages:[
-{
-role:"system",
-content:`
-Jawab hanya JSON.
+    const response = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `
+Kembalikan HANYA JSON valid.
 
 Format:
-
 {
-"nama":"",
-"bahan":[
-{
-"nama":"",
-"merk":""
+  "nama":"",
+  "bahan":[
+    {
+      "nama":"",
+      "merk":""
+    }
+  ],
+  "cara":[]
 }
-],
-"cara":[]
-}
+`,
+            },
+            {
+              role: "user",
+              content: `Buat resep ${makanan}`,
+            },
+          ],
+          temperature: 0.3,
+        }),
+      }
+    );
 
-Gunakan merek bahan yang umum di Indonesia bila relevan.
-`
-},
-{
-role:"user",
-content:
-`Buat resep ${makanan}`
-}
-]
-})
-}
-);
+    const openaiData = await response.json();
 
-const data =
-await response.json();
+    if (!response.ok) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify(openaiData),
+      };
+    }
 
-return{
-statusCode:200,
-body:data.choices[0]
-.message.content
-};
-
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: openaiData.choices[0].message.content,
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: err.message,
+      }),
+    };
+  }
 };
